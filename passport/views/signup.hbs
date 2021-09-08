@@ -1,0 +1,15 @@
+<h1>Signup</h1>
+<form action="/signup" method="POST">
+	<label for="username">Username: </label>
+	<input type="text" name="username" id="username">
+
+	<label for="password">Password: </label>
+	<input type="password" name="password" id="password">
+
+	<button type="submit">Sign up</button>
+</form>
+
+<a href="/github">Sign Up with GitHub 🦊</a>
+{{#if message}}
+	<p style="color: red">{{message}}</p>
+{{/if}}
