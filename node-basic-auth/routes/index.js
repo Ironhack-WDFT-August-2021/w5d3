@@ -1,56 +1,38 @@
 const router = require("express").Router();
-const User = require('../models/User.model');
-const bcrypt = require('bcrypt');
+
 
 /* GET home page */
 router.get("/", (req, res, next) => {
   res.render("index");
 });
 
-router.get("/signup", (req, res, next) => {
-  res.render("signup");
-});
+// create a middleware to check if the user is logged in
+const loginCheck = () => {
+  return (req, res, next) => {
+    // is there a logged in user?
+    if (req.session.user) {
+      // if yes -> proceed as requested
+      next();
+    } else {
+      // if there is no logged in user -> redirect to login
+      res.redirect('/login');
+    }
+  }
+}
 
-router.post('/signup', (req, res, next) => {
-  console.log(req.body);
-  const { username, password } = req.body;
-  // validation
-  // is the password 4+ chars
-  if (password.length < 4) {
-    // if not show the signup form again with a message
-    res.render('signup', { message: 'Your password needs to be 4 chars min' });
-    return;
-  }
-  // is the username empty
-  if (username.length === 0) {
-    res.render('signup', { message: 'Username cannot be empty' });
-    return;
-  }
-  // validation passed
-  // we now check if the username already exists
-  User.findOne({ username: username })
-    .then(userFromDB => {
-      // if user exists 
-      if (userFromDB !== null) {
-        // we render signup again
-        res.render('signup', { message: 'Username is already taken' });
-      } else {
-        // if we reach this line the username can be used
-        // password as the value for the password field
-        const salt = bcrypt.genSaltSync();
-        const hash = bcrypt.hashSync(password, salt);
-        console.log(hash);
-        // we create a document for that user in the db with the hashed 
-        User.create({ username: username, password: hash })
-          .then(createdUser => {
-            console.log(createdUser);
-            res.redirect('/');
-          })
-          .catch(err => {
-            next(err);
-          })
-      }
-    })
+// this route is now protected -> can only be accessed by a logged in user
+router.get('/profile', loginCheck(), (req, res, next) => {
+  // we can access a cookie
+  console.log('this is the cookie: ', req.cookies);
+  // this is how we can set a cookie 
+  res.cookie('myCookie', 'hello world');
+  // this is how you can delete a cookie
+  res.clearCookie('myCookie');
+  // we retrieve the logged in user from the session
+  const loggedInUser = req.session.user;
+  console.log(loggedInUser);
+  // and pass the user object into the view
+  res.render('profile', { user: loggedInUser });
 });
 
 
